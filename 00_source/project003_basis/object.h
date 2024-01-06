@@ -78,6 +78,7 @@ public:
 		LABEL_WAVE,			// 波動
 		LABEL_EFFECT,		// エフェクト
 		LABEL_PARTICLE,		// パーティクル
+		LABEL_TEAPOT,		// ティーポット
 		LABEL_PLAYER,		// プレイヤー
 		LABEL_FIELD,		// 地面
 		LABEL_WALL,			// 壁

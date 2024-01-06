@@ -367,16 +367,19 @@ void CManager::Draw(void)
 //============================================================
 CManager *CManager::Create(HINSTANCE hInstance, HWND hWnd, BOOL bWindow)
 {
+	// インスタンス使用中
+	assert(m_pManager == nullptr);
+
+	// マネージャーの生成
+	m_pManager = new CManager;
 	if (m_pManager == nullptr)
-	{ // 使用されていない場合
+	{ // 生成に失敗した場合
 
-		// メモリを確保
-		m_pManager = new CManager;	// マネージャー
+		assert(false);
+		return nullptr;
 	}
-	else { assert(false); return nullptr; }	// 使用中
-
-	if (m_pManager != nullptr)
-	{ // 確保に成功している場合
+	else
+	{ // 生成に成功した場合
 
 		// マネージャーの初期化
 		if (FAILED(m_pManager->Init(hInstance, hWnd, bWindow)))
@@ -390,7 +393,6 @@ CManager *CManager::Create(HINSTANCE hInstance, HWND hWnd, BOOL bWindow)
 		// 確保したアドレスを返す
 		return m_pManager;
 	}
-	else { assert(false); return nullptr; }	// 確保失敗
 }
 
 //============================================================
