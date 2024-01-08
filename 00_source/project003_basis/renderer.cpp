@@ -38,8 +38,10 @@ CRenderer::CRenderer() :
 	m_pD3DDevice		(nullptr),	// Direct3Dデバイス
 	m_pDrawScreen		(nullptr),	// 画面描画用の2Dポリゴン
 	m_nRenderTextureID	(0),		// レンダーテクスチャのインデックス
+	m_nZTextureID		(0),		// Z値テクスチャのインデックス
 	m_pRenderTextureSurface		(nullptr),	// 描画サーフェイスへのポインタ
 	m_pDepthStencilSurface		(nullptr),	// Zバッファ・ステンシルバッファのサーフェイスへのポインタ
+	m_pZTexSurface				(nullptr),	// Z値テクスチャの描画サーフェイスへのポインタ
 	m_pDefRenderTextureSurface	(nullptr),	// 元の描画サーフェイス保存用
 	m_pDefDepthStencilSurface	(nullptr)	// 元のZバッファ・ステンシルバッファのサーフェイス保存用
 {
@@ -71,6 +73,7 @@ HRESULT CRenderer::Init(HWND hWnd, BOOL bWindow)
 
 	m_pRenderTextureSurface		= nullptr;	// 描画サーフェイスへのポインタ
 	m_pDepthStencilSurface		= nullptr;	// Zバッファ・ステンシルバッファのサーフェイスへのポインタ
+	m_pZTexSurface				= nullptr;	// Z値テクスチャの描画サーフェイスへのポインタ
 	m_pDefRenderTextureSurface	= nullptr;	// 元の描画サーフェイス保存用
 	m_pDefDepthStencilSurface	= nullptr;	// 元のZバッファ・ステンシルバッファのサーフェイス保存用
 
@@ -161,6 +164,9 @@ void CRenderer::Uninit(void)
 	// Zバッファ・ステンシルバッファのサーフェイスの破棄
 	SAFE_RELEASE(m_pDepthStencilSurface);
 
+	// Z値テクスチャの描画サーフェイスの破棄
+	SAFE_RELEASE(m_pZTexSurface);
+
 	// 元の描画サーフェイスの破棄
 	SAFE_RELEASE(m_pDefRenderTextureSurface);
 
@@ -200,6 +206,7 @@ void CRenderer::Draw(void)
 
 	// 描画サーフェイスを作成したものに変更
 	hr = m_pD3DDevice->SetRenderTarget(0, m_pRenderTextureSurface);
+	hr = m_pD3DDevice->SetRenderTarget(1, m_pZTexSurface);
 	assert(SUCCEEDED(hr));
 
 	// Zバッファ・ステンシルバッファのサーフェイスを作成したものに変更
@@ -239,6 +246,7 @@ void CRenderer::Draw(void)
 
 	// 描画サーフェイスを元に戻す
 	hr = m_pD3DDevice->SetRenderTarget(0, m_pDefRenderTextureSurface);
+	hr = m_pD3DDevice->SetRenderTarget(1, nullptr);
 	assert(SUCCEEDED(hr));
 
 	// Zバッファ・ステンシルバッファのサーフェイスを元に戻す
@@ -298,14 +306,25 @@ HRESULT CRenderer::CreateRenderTexture(void)
 	CTexture *pTexture = GET_MANAGER->GetTexture();	// テクスチャへのポインタ
 	assert(pTexture != nullptr);
 
-	// 空のテクスチャを生成
+	// レンダーテクスチャを生成
 	m_nRenderTextureID = pTexture->Regist(CTexture::SInfo
 	( // 引数
 		SCREEN_WIDTH,			// テクスチャ横幅
 		SCREEN_HEIGHT,			// テクスチャ縦幅
-		0,						// ミップマップレベル
+		1,						// ミップマップレベル
 		D3DUSAGE_RENDERTARGET,	// 性質・確保オプション
 		D3DFMT_X8R8G8B8,		// ピクセルフォーマット
+		D3DPOOL_DEFAULT			// 格納メモリ
+	));
+
+	// Z値テクスチャを生成
+	m_nZTextureID = pTexture->Regist(CTexture::SInfo
+	( // 引数
+		SCREEN_WIDTH,			// テクスチャ横幅
+		SCREEN_HEIGHT,			// テクスチャ縦幅
+		1,						// ミップマップレベル
+		D3DUSAGE_RENDERTARGET,	// 性質・確保オプション
+		D3DFMT_A8R8G8B8,			// ピクセルフォーマット
 		D3DPOOL_DEFAULT			// 格納メモリ
 	));
 
@@ -324,7 +343,7 @@ HRESULT CRenderer::CreateRenderTexture(void)
 		}
 
 		// テクスチャを割当
-		m_pDrawScreen->BindTexture(m_nRenderTextureID);
+		m_pDrawScreen->BindTexture(m_nZTextureID);
 
 		// ラベルをスクリーンに設定
 		m_pDrawScreen->SetLabel(CObject::LABEL_SCREEN);
@@ -354,11 +373,25 @@ HRESULT CRenderer::CreateRenderTexture(void)
 		return E_FAIL;
 	}
 
-	// 描画サーフェイスの取得
+	// レンダーテクスチャの描画サーフェイス取得
 	hr = pTexture->GetTexture(m_nRenderTextureID)->GetSurfaceLevel
 	( // 引数
 		0,							// ミップマップレベル
 		&m_pRenderTextureSurface	// 描画サーフェイスへのポインタ
+	);
+	if (FAILED(hr))
+	{ // サーフェイスの取得に失敗した場合
+
+		// 失敗を返す
+		assert(false);
+		return E_FAIL;
+	}
+
+	// Z値テクスチャの描画サーフェイス取得
+	hr = pTexture->GetTexture(m_nZTextureID)->GetSurfaceLevel
+	( // 引数
+		0,				// ミップマップレベル
+		&m_pZTexSurface	// 描画サーフェイスへのポインタ
 	);
 	if (FAILED(hr))
 	{ // サーフェイスの取得に失敗した場合

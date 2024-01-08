@@ -40,9 +40,10 @@ sampler_state		// サンプラーステート
 // 頂点シェーダー出力情報
 struct VS_OUTPUT
 {
-	float4 pos	: POSITION;		// 頂点座標
-	float2 tex	: TEXCOORD0;	// テクセル座標
-	float3 nor	: TEXCOORD1;	// 法線
+	float4 pos		: POSITION;		// 頂点座標
+	float2 tex		: TEXCOORD0;	// テクセル座標
+	float3 nor		: TEXCOORD1;	// 法線
+	float4 depth	: TEXCOORD2;	// Z値
 };
 
 //************************************************************
@@ -87,6 +88,9 @@ void VS
 
 	// テクセル座標を設定
 	outVertex.tex = inTex;
+
+	// テクスチャ座標を頂点に合わせる
+	outVertex.depth = outVertex.pos;
 }
 
 //============================================================
@@ -94,8 +98,9 @@ void VS
 //============================================================
 void PS
 (
-	in	VS_OUTPUT	inVertex,		// 頂点情報
-	out	float4		outCol : COLOR0	// ピクセル色
+	in	VS_OUTPUT	inVertex,			// 頂点情報
+	out	float4		outCol	: COLOR0,	// ピクセル色
+	out	float4		outZ	: COLOR1	// ピクセルZ値
 )
 {
 	// 変数を宣言
@@ -120,6 +125,11 @@ void PS
 		// テクセルの色を乗算
 		outCol *= tex2D(texObject, inVertex.tex);
 	}
+
+	// 深度情報を格納する。
+	// Z / W により 0 から 1 の間に正規化されたZ値情報に変換
+	outZ = inVertex.depth.z / inVertex.depth.w;
+	outZ.a = 1.0f;
 }
 
 //============================================================

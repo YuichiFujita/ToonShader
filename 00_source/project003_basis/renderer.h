@@ -50,9 +50,15 @@ private:
 	LPDIRECT3DDEVICE9	m_pD3DDevice;	// Direct3Dデバイス
 
 	int m_nRenderTextureID;		// レンダーテクスチャのインデックス
+	int m_nZTextureID;			// Z値テクスチャのインデックス
+
 	CObject2D *m_pDrawScreen;	// 画面描画用の2Dポリゴン
+
 	LPDIRECT3DSURFACE9 m_pRenderTextureSurface;		// 描画サーフェイスへのポインタ
 	LPDIRECT3DSURFACE9 m_pDepthStencilSurface;		// Zバッファ・ステンシルバッファのサーフェイスへのポインタ
+
+	LPDIRECT3DSURFACE9 m_pZTexSurface;	// Z値テクスチャの描画サーフェイスへのポインタ
+
 	LPDIRECT3DSURFACE9 m_pDefRenderTextureSurface;	// 元の描画サーフェイス保存用
 	LPDIRECT3DSURFACE9 m_pDefDepthStencilSurface;	// 元のZバッファ・ステンシルバッファのサーフェイス保存用
 };
