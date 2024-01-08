@@ -23,13 +23,6 @@
 class CTeapot : public CObjectModel
 {
 public:
-	// テクスチャ列挙
-	enum ETeture
-	{
-		TEXTURE_NORMAL = 0,	// 法線テクスチャ
-		TEXTURE_MAX			// この列挙型の総数
-	};
-
 	// モデル列挙
 	enum EModel
 	{

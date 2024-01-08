@@ -8,6 +8,7 @@
 //	インクルードファイル
 //************************************************************
 #include "shader.h"
+#include "shaderToon.h"
 #include "manager.h"
 #include "renderer.h"
 
@@ -65,7 +66,7 @@ void CShader::Uninit(void)
 //============================================================
 void CShader::Begin(void)
 {
-	if (m_pEffect == nullptr) { return; }	// エフェクト未使用
+	if (m_pEffect == nullptr) { assert(false); return; }	// エフェクト未使用
 
 	// 開始
 	m_pEffect->Begin(nullptr, 0);
@@ -76,7 +77,7 @@ void CShader::Begin(void)
 //============================================================
 void CShader::BeginPass(const BYTE pass)
 {
-	if (m_pEffect == nullptr) { return; }	// エフェクト未使用
+	if (m_pEffect == nullptr) { assert(false); return; }	// エフェクト未使用
 
 	// パスの開始
 	m_pEffect->BeginPass(pass);
@@ -87,7 +88,7 @@ void CShader::BeginPass(const BYTE pass)
 //============================================================
 void CShader::EndPass(void)
 {
-	if (m_pEffect == nullptr) { return; }	// エフェクト未使用
+	if (m_pEffect == nullptr) { assert(false); return; }	// エフェクト未使用
 
 	// パスの終了
 	m_pEffect->EndPass();
@@ -98,7 +99,7 @@ void CShader::EndPass(void)
 //============================================================
 void CShader::End(void)
 {
-	if (m_pEffect == nullptr) { return; }	// エフェクト未使用
+	if (m_pEffect == nullptr) { assert(false); return; }	// エフェクト未使用
 
 	// 終了
 	m_pEffect->End();
@@ -109,7 +110,7 @@ void CShader::End(void)
 //============================================================
 void CShader::SetMatrix(D3DXMATRIX* pMtxWorld)
 {
-	if (m_pEffect == nullptr) { return; }	// エフェクト未使用
+	if (m_pEffect == nullptr) { assert(false); return; }	// エフェクト未使用
 
 	// 変数を宣言
 	D3DXMATRIX mtxView;			// ビューマトリックス
@@ -133,7 +134,7 @@ void CShader::SetMatrix(D3DXMATRIX* pMtxWorld)
 //============================================================
 void CShader::CommitChanges(void)
 {
-	if (m_pEffect == nullptr) { return; }	// エフェクト未使用
+	if (m_pEffect == nullptr) { assert(false); return; }	// エフェクト未使用
 
 	// 状態変更の伝達
 	m_pEffect->CommitChanges();
@@ -160,9 +161,20 @@ LPD3DXEFFECT CShader::GetEffect(void) const
 //============================================================
 //	生成処理
 //============================================================
-void CShader::Create(void)
+HRESULT CShader::Create(void)
 {
+	// トゥーンシェーダーの生成
+	CToonShader *pToonShader = CToonShader::Create();
+	if (pToonShader == nullptr)
+	{ // 生成に失敗した場合
 
+		// 失敗を返す
+		assert(false);
+		return E_FAIL;
+	}
+
+	// 成功を返す
+	return S_OK;
 }
 
 //============================================================
@@ -170,7 +182,8 @@ void CShader::Create(void)
 //============================================================
 void CShader::Release(void)
 {
-
+	// トゥーンシェーダーの破棄
+	CToonShader::Release();
 }
 
 //============================================================
@@ -196,4 +209,5 @@ void CShader::SetTechnique(const D3DXHANDLE pTechnique)
 		// エフェクトにテクニック関数を設定
 		m_pEffect->SetTechnique(m_pTechnique);
 	}
+	else { assert(false); }	// エフェクト使用不可
 }

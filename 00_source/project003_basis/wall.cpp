@@ -11,6 +11,7 @@
 #include "manager.h"
 #include "renderer.h"
 #include "texture.h"
+#include "shaderToon.h"
 
 //************************************************************
 //	定数宣言
@@ -90,8 +91,53 @@ void CWall::Update(void)
 //============================================================
 void CWall::Draw(void)
 {
-	// オブジェクトメッシュウォールの描画
-	CObjectMeshWall::Draw();
+	// ポインタを宣言
+	LPDIRECT3DDEVICE9 pDevice	= CManager::GetInstance()->GetRenderer()->GetDevice();	// デバイス情報
+	CTexture	*pTexture		= CManager::GetInstance()->GetTexture();	// テクスチャ情報
+	CToonShader	*pToonShader	= CToonShader::GetInstance();	// トゥーンシェーダー情報
+
+	if (pDevice == nullptr || pTexture == nullptr || pToonShader == nullptr)
+	{ // 情報が無いものがあった場合
+
+		// オブジェクトメッシュウォールの描画
+		CObjectMeshWall::Draw();
+
+		// 処理を抜ける
+		assert(false);
+		return;
+	}
+
+	if (pToonShader->IsEffectOK())
+	{ // エフェクトが使用可能な場合
+
+		// 描画開始
+		pToonShader->Begin();
+
+		// マトリックス情報を設定
+		pToonShader->SetMatrix(GetPtrMtxWorld());
+
+		// ライト方向を設定
+		pToonShader->SetLightDirect(GetPtrMtxWorld(), 0);
+
+		// テクスチャ使用を設定
+		pToonShader->SetUseTexture(GET_MANAGER->GetTexture()->Regist(TEXTURE_FILE[0]));
+
+		// 拡散光を設定
+		pToonShader->SetDiffuse(GetColor());
+
+		// 状態変更の伝達
+		pToonShader->CommitChanges();
+
+		// パスを設定
+		pToonShader->BeginPass(0);
+
+		// オブジェクトメッシュウォールの描画
+		CObjectMeshWall::Draw();
+
+		// 描画終了
+		pToonShader->EndPass();
+		pToonShader->End();
+	}
 }
 
 //============================================================

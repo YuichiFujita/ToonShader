@@ -18,17 +18,19 @@
 //************************************************************
 namespace
 {
-	const char *TEXTURE_FILE[] =	// テクスチャ定数
+	const char *MODEL_FILE[] =	// モデル定数
 	{
-		"dataSHADER\\\\TEXTURE\\normal5.png",	// 法線テクスチャ
-	};
-	const char *MODEL_FILE[] =		// モデル定数
-	{
-		"data\\MODEL\\TEAPOT\\teapot005.x",		// ティーポット
+		"data\\MODEL\\TEAPOT\\teapot000.x",			// ティーポット
+		//"data\\MODEL\\OBSTACLE\\obstacle025.x",	// ティーポット
 	};
 
 	const int PRIORITY = 0;	// ティーポットの優先順位
 }
+
+//************************************************************
+//	スタティックアサート
+//************************************************************
+static_assert(NUM_ARRAY(MODEL_FILE) == CTeapot::MODEL_MAX, "ERROR : Model Count Mismatch");
 
 //************************************************************
 //	子クラス [CTeapot] のメンバ関数
@@ -54,17 +56,6 @@ CTeapot::~CTeapot()
 //============================================================
 HRESULT CTeapot::Init(void)
 {
-	// 変数配列を宣言
-	D3DVERTEXELEMENT9 aDecl[] =	// 頂点データ定義
-	{
-		{ 0,  0, D3DDECLTYPE_FLOAT3, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_POSITION, 0 },
-		{ 0, 12, D3DDECLTYPE_FLOAT3, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TANGENT,  0 },
-		{ 0, 24, D3DDECLTYPE_FLOAT3, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_BINORMAL, 0 },
-		{ 0, 36, D3DDECLTYPE_FLOAT3, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_NORMAL,   0 },
-		{ 0, 48, D3DDECLTYPE_FLOAT2, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 0 },
-		D3DDECL_END()
-	};
-
 	// オブジェクトモデルの初期化
 	if (FAILED(CObjectModel::Init()))
 	{ // 初期化に失敗した場合
@@ -76,14 +67,6 @@ HRESULT CTeapot::Init(void)
 
 	// モデルを登録・割当
 	BindModel(MODEL_FILE[MODEL_TEAPOT]);
-
-	//// モデルの頂点データを変換
-	//if (FAILED(SetVertexDecl(&aDecl[0])))
-	//{ // 変換に失敗した場合
-
-	//	// 失敗を返す
-	//	return E_FAIL;
-	//}
 
 	// 成功を返す
 	return S_OK;
@@ -103,6 +86,9 @@ void CTeapot::Uninit(void)
 //============================================================
 void CTeapot::Update(void)
 {
+	SetVec3Rotation(GetVec3Rotation() + D3DXVECTOR3(0.0f, 0.01f, 0.0f));
+	//SetAllMaterial(material::Blue());
+
 	// オブジェクトモデルの更新
 	CObjectModel::Update();
 }
@@ -113,9 +99,9 @@ void CTeapot::Update(void)
 void CTeapot::Draw(void)
 {
 	// ポインタを宣言
-	LPDIRECT3DDEVICE9 pDevice = CManager::GetInstance()->GetRenderer()->GetDevice();	// デバイス情報
-	CTexture *pTexture = CManager::GetInstance()->GetTexture();	// テクスチャ情報
-	CToonShader *pToonShader = CToonShader::GetInstance();		// トゥーンシェーダー情報
+	LPDIRECT3DDEVICE9 pDevice	= CManager::GetInstance()->GetRenderer()->GetDevice();	// デバイス情報
+	CTexture	*pTexture		= CManager::GetInstance()->GetTexture();	// テクスチャ情報
+	CToonShader	*pToonShader	= CToonShader::GetInstance();	// トゥーンシェーダー情報
 
 	if (pDevice == nullptr || pTexture == nullptr || pToonShader == nullptr)
 	{ // 情報が無いものがあった場合
@@ -131,14 +117,20 @@ void CTeapot::Draw(void)
 	if (pToonShader->IsEffectOK())
 	{ // エフェクトが使用可能な場合
 
-		// ステージ1のテクスチャを設定
-		pDevice->SetTexture(1, pTexture->GetTexture(pTexture->Regist(TEXTURE_FILE[TEXTURE_NORMAL])));	// 法線テクスチャ
-
 		// 描画開始
 		pToonShader->Begin();
 
 		// マトリックス情報を設定
 		pToonShader->SetMatrix(GetPtrMtxWorld());
+
+		// ライト方向を設定
+		pToonShader->SetLightDirect(GetPtrMtxWorld(), 0);
+
+		// テクスチャ使用を設定
+		pToonShader->SetUseTexture(GetModelData().pTextureID[0]);
+
+		// マテリアルを設定
+		pToonShader->SetMaterial(GetMaterial(0));
 
 		// 状態変更の伝達
 		pToonShader->CommitChanges();
@@ -152,9 +144,6 @@ void CTeapot::Draw(void)
 		// 描画終了
 		pToonShader->EndPass();
 		pToonShader->End();
-
-		// ステージ1のテクスチャを初期化
-		pDevice->SetTexture(1, nullptr);
 	}
 }
 

@@ -19,6 +19,7 @@
 #include "model.h"
 #include "retentionManager.h"
 #include "debug.h"
+#include "shader.h"
 
 //************************************************************
 //	静的メンバ変数宣言
@@ -209,6 +210,15 @@ HRESULT CManager::Init(HINSTANCE hInstance, HWND hWnd, BOOL bWindow)
 		return E_FAIL;
 	}
 
+	// シェーダーの生成
+	if (FAILED(CShader::Create()))
+	{ // 生成に失敗した場合
+
+		// 失敗を返す
+		assert(false);
+		return E_FAIL;
+	}
+
 	// フェードの生成・シーンの設定
 	m_pFade = CFade::Create();
 	if (m_pFade == nullptr)
@@ -268,6 +278,9 @@ void CManager::Uninit(void)
 
 	// モデルの破棄
 	SAFE_REF_RELEASE(m_pModel);
+
+	// シェーダーの破棄
+	CShader::Release();
 
 	//--------------------------------------------------------
 	//	システムの破棄

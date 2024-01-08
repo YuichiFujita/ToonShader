@@ -10,15 +10,26 @@
 #include "shaderToon.h"
 #include "manager.h"
 #include "renderer.h"
-#include "camera.h"
+#include "light.h"
+#include "texture.h"
 
 //************************************************************
 //	定数宣言
 //************************************************************
 namespace
 {
-	const char* EFFECT_FX = "Normal.fx";	// バンプマップのエフェクトファイル
+	const char *TEXTURE_FILE[] =	// テクスチャ定数
+	{
+		"data\\TEXTURE\\SHADER\\toon005.png",	// 通常テクスチャ
+	};
+
+	const char* EFFECT_FX = "shaderToon.fx";	// トゥーンシェーダーのエフェクトファイル
 }
+
+//************************************************************
+//	スタティックアサート
+//************************************************************
+static_assert(NUM_ARRAY(TEXTURE_FILE) == CToonShader::TEXTURE_MAX, "ERROR : Texture Count Mismatch");
 
 //************************************************************
 //	静的メンバ変数宣言
@@ -32,8 +43,10 @@ CToonShader *CToonShader::m_pShader = nullptr;	// シェーダー情報
 //	コンストラクタ
 //============================================================
 CToonShader::CToonShader() :
-	m_pLightLocalDirect	(nullptr),	// 平行光源の方向ベクトル
-	m_pCameraVec		(nullptr)	// カメラベクトル
+	m_pTextureToon	(nullptr),	// トゥーンマップテクスチャ
+	m_pDirectLight	(nullptr),	// 平行光源の方向ベクトル
+	m_pDiffuse		(nullptr),	// 拡散光
+	m_pUseTexture	(nullptr)	// テクスチャの使用状況
 {
 
 }
@@ -57,12 +70,14 @@ HRESULT CToonShader::Init(void)
 
 	// ポインタを宣言
 	LPDIRECT3DDEVICE9 pDevice = CManager::GetInstance()->GetRenderer()->GetDevice();	// デバイス情報
-	LPD3DXBUFFER pError = nullptr;	// コンパイルエラー情報
+	LPD3DXBUFFER pError  = nullptr;	// コンパイルエラー情報
 	LPD3DXEFFECT pEffect = nullptr;	// エフェクト設定用
 
 	// メンバ変数を初期化
-	m_pLightLocalDirect	= nullptr;	// 平行光源の方向ベクトル
-	m_pCameraVec		= nullptr;	// カメラベクトル
+	m_pTextureToon	= nullptr;	// トゥーンマップテクスチャ
+	m_pDirectLight	= nullptr;	// 平行光源の方向ベクトル
+	m_pDiffuse		= nullptr;	// 拡散光
+	m_pUseTexture	= nullptr;	// テクスチャの使用状況
 
 	// シェーダーの初期化
 	if (FAILED(CShader::Init()))
@@ -76,7 +91,7 @@ HRESULT CToonShader::Init(void)
 	// ハードウェア機能を取得
 	pDevice->GetDeviceCaps(&caps);
 
-	if (caps.VertexShaderVersion >= D3DVS_VERSION(2, 0)
+	if (caps.VertexShaderVersion >= D3DVS_VERSION(1, 1)
 	&&  caps.PixelShaderVersion  >= D3DPS_VERSION(2, 0))
 	{ // 頂点・ピクセルシェーダのバージョンが使用可能な場合
 
@@ -99,16 +114,21 @@ HRESULT CToonShader::Init(void)
 			SetEffect(pEffect);
 
 			// テクニック関数を取得・設定
-			SetTechnique(pEffect->GetTechniqueByName("NormalMap"));
+			SetTechnique(pEffect->GetTechniqueByName("TShader"));
 
 			// 各マトリックスのグローバル変数を取得・設定
-			SetMatrixWorld(pEffect->GetParameterByName(nullptr, "g_worldMat"));		// ワールドマトリックス
-			SetMatrixView(pEffect->GetParameterByName(nullptr, "g_viewMat"));		// ビューマトリックス
-			SetMatrixProjection(pEffect->GetParameterByName(nullptr, "g_projMat"));	// プロジェクションマトリックス
+			SetMatrixWorld(pEffect->GetParameterByName(nullptr, "g_mtxWorld"));		// ワールドマトリックス
+			SetMatrixView(pEffect->GetParameterByName(nullptr, "g_mtxView"));		// ビューマトリックス
+			SetMatrixProjection(pEffect->GetParameterByName(nullptr, "g_mtxProj"));	// プロジェクションマトリックス
 
 			// グローバル変数を取得
-			m_pLightLocalDirect	= pEffect->GetParameterByName(nullptr, "g_LightLocalDirect");	// 平行光源の方向ベクトル
-			m_pCameraVec		= pEffect->GetParameterByName(nullptr, "cameraVec");			// カメラベクトル
+			m_pTextureToon	= pEffect->GetParameterByName(nullptr, "g_textureToon");	// トゥーンマップテクスチャ
+			m_pDirectLight	= pEffect->GetParameterByName(nullptr, "g_dirLight");		// 平行光源の方向ベクトル
+			m_pDiffuse		= pEffect->GetParameterByName(nullptr, "g_diffuse");		// 拡散光
+			m_pUseTexture	= pEffect->GetParameterByName(nullptr, "g_bUseTex");		// テクスチャの使用状況
+
+			// トゥーンマップテクスチャを設定
+			SetToonMapTexture(TEXTURE_NORMAL);
 		}
 		else
 		{ // 読込に失敗した場合
@@ -135,6 +155,96 @@ void CToonShader::Uninit(void)
 {
 	// シェーダーの終了
 	CShader::Uninit();
+}
+
+//============================================================
+//	ライト方向ベクトルの設定処理
+//============================================================
+void CToonShader::SetLightDirect(D3DXMATRIX *pMtxWorld, const int nLightID)
+{
+	if (!IsEffectOK()) { assert(false); return; }	// エフェクト未使用
+
+	// 変数を宣言
+	D3DXVECTOR3 dir = GET_MANAGER->GetLight()->GetLight(nLightID).Direction;	// ライト方向 (三軸)
+	D3DXVECTOR4 dirLight = D3DXVECTOR4(dir.x, dir.y, dir.z, 0.0f);				// ライト方向 (四軸)
+	D3DXMATRIX  mtxInvWorld;	// ワールドマトリックス逆行列
+
+	// 平行光源の方向ベクトルを計算
+	D3DXMatrixInverse(&mtxInvWorld, nullptr, pMtxWorld);					// ワールドマトリックスの逆行列を計算
+	D3DXVec4Transform(&dirLight, &dirLight, &mtxInvWorld);					// マトリックスをベクトルに変換
+	D3DXVec3Normalize((D3DXVECTOR3*)&dirLight, (D3DXVECTOR3*)&dirLight);	// ベクトルを三次元変換し正規化
+
+	// エフェクトに平行光源の方向ベクトルを設定
+	GetEffect()->SetVector(m_pDirectLight, &dirLight);
+}
+
+//============================================================
+//	テクスチャ使用の設定処理 (ポインタ)
+//============================================================
+void CToonShader::SetUseTexture(const LPDIRECT3DTEXTURE9 *pTexture)
+{
+	if (!IsEffectOK()) { assert(false); return; }	// エフェクト未使用
+
+	// エフェクトにテクスチャの使用状況を設定
+	if (pTexture == nullptr)
+	{ // テクスチャが使用されていない場合
+
+		GetEffect()->SetBool(m_pUseTexture, false);
+	}
+	else
+	{ // テクスチャが使用されている場合
+
+		GetEffect()->SetBool(m_pUseTexture, true);
+	}
+}
+
+//============================================================
+//	テクスチャ使用の設定処理 (インデックス)
+//============================================================
+void CToonShader::SetUseTexture(const int nTextureID)
+{
+	if (!IsEffectOK()) { assert(false); return; }	// エフェクト未使用
+
+	// エフェクトにテクスチャの使用状況を設定
+	if (nTextureID == NONE_IDX)
+	{ // テクスチャが使用されていない場合
+
+		GetEffect()->SetBool(m_pUseTexture, false);
+	}
+	else if (nTextureID > NONE_IDX)
+	{ // テクスチャが使用されている場合
+
+		GetEffect()->SetBool(m_pUseTexture, true);
+	}
+	else { assert(false); }	// 使用不可インデックス
+}
+
+//============================================================
+//	マテリアルの設定処理
+//============================================================
+void CToonShader::SetMaterial(const D3DXMATERIAL& rMaterial)
+{
+	if (!IsEffectOK()) { assert(false); return; }	// エフェクト未使用
+
+	// 変数を宣言
+	D3DXVECTOR4 diffuse = D3DXVECTOR4(rMaterial.MatD3D.Diffuse.r, rMaterial.MatD3D.Diffuse.g, rMaterial.MatD3D.Diffuse.b, rMaterial.MatD3D.Diffuse.a);	// 拡散光
+
+	// エフェクトにマテリアルの拡散光を設定
+	GetEffect()->SetVector(m_pDiffuse, &diffuse);
+}
+
+//============================================================
+//	拡散光の設定処理
+//============================================================
+void CToonShader::SetDiffuse(const D3DXCOLOR& rDiffuse)
+{
+	if (!IsEffectOK()) { assert(false); return; }	// エフェクト未使用
+
+	// 変数を宣言
+	D3DXVECTOR4 diffuse = D3DXVECTOR4(rDiffuse.r, rDiffuse.g, rDiffuse.b, rDiffuse.a);	// 拡散光
+
+	// エフェクトに拡散光を設定
+	GetEffect()->SetVector(m_pDiffuse, &diffuse);
 }
 
 //============================================================
@@ -193,4 +303,21 @@ void CToonShader::Release(void)
 
 	// メモリ開放
 	SAFE_DELETE(m_pShader);
+}
+
+//============================================================
+//	トゥーンマップテクスチャの設定処理
+//============================================================
+void CToonShader::SetToonMapTexture(const ETexture texture)
+{
+	if (texture > NONE_IDX && texture < TEXTURE_MAX)
+	{ // インデックスが範囲内の場合
+
+		if (!IsEffectOK()) { assert(false); return; }	// エフェクト未使用
+		CTexture *pTexture = CManager::GetInstance()->GetTexture();	// テクスチャ情報
+
+		// エフェクトにトゥーンマップ用テクスチャを設定
+		GetEffect()->SetTexture(m_pTextureToon, pTexture->GetTexture(pTexture->Regist(TEXTURE_FILE[texture])));
+	}
+	else { assert(false); }	// 範囲外
 }

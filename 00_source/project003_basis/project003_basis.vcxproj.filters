@@ -477,5 +477,8 @@
     <FxCompile Include="Normal.fx">
       <Filter>シェーダーファイル</Filter>
     </FxCompile>
+    <FxCompile Include="shaderToon.fx">
+      <Filter>シェーダーファイル</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

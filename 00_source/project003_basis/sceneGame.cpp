@@ -18,6 +18,9 @@
 #include "pause.h"
 #include "player.h"
 
+// TODO
+#include "teapot.h"
+
 //************************************************************
 //	定数宣言
 //************************************************************
@@ -122,11 +125,14 @@ HRESULT CSceneGame::Init(void)
 		return E_FAIL;
 	}
 
+	// TODO
+	CTeapot::Create(D3DXVECTOR3(0.0f, 100.0f, 0.0f), VEC3_ZERO);
+
 	//--------------------------------------------------------
 	//	初期設定
 	//--------------------------------------------------------
 	// カメラを設定
-	GET_MANAGER->GetCamera()->SetState(CCamera::STATE_FOLLOW);	// カメラを追従状態に設定
+	//GET_MANAGER->GetCamera()->SetState(CCamera::STATE_FOLLOW);	// カメラを追従状態に設定	// TODO
 
 	// プレイヤーを出現
 	CScene::GetPlayer()->SetSpawn();

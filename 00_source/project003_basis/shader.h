@@ -38,8 +38,8 @@ public:
 	LPD3DXEFFECT GetEffect(void) const;		// エフェクトポインタ取得
 
 	// 静的メンバ関数
-	static void Create(void);	// 生成
-	static void Release(void);	// 破棄
+	static HRESULT Create(void);	// 生成
+	static void Release(void);		// 破棄
 
 protected:
 	// メンバ関数
