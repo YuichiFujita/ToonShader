@@ -53,6 +53,8 @@
 #define VEC2_ONE	(D3DXVECTOR2(1.0f, 1.0f))	// 1クリア
 #define VEC2_ALL(f)	(D3DXVECTOR2((f), (f))		// 同値クリア
 
+#define TEXEL_SIZE	(D3DXVECTOR2(1.0f / (float)SCREEN_WIDTH, 1.0f / (float)SCREEN_HEIGHT))	// テクセルサイズ
+
 // D3DXVECTOR3関係
 #define VEC3_ZERO	(D3DXVECTOR3(0.0f, 0.0f, 0.0f))	// 0クリア
 #define VEC3_ONE	(D3DXVECTOR3(1.0f, 1.0f, 1.0f))	// 1クリア

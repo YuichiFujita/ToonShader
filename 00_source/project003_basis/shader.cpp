@@ -9,6 +9,7 @@
 //************************************************************
 #include "shader.h"
 #include "shaderToon.h"
+#include "shaderEdge.h"
 #include "manager.h"
 #include "renderer.h"
 
@@ -173,6 +174,16 @@ HRESULT CShader::Create(void)
 		return E_FAIL;
 	}
 
+	// エッジシェーダーの生成
+	CEdgeShader *pEdgeShader = CEdgeShader::Create();
+	if (pEdgeShader == nullptr)
+	{ // 生成に失敗した場合
+
+		// 失敗を返す
+		assert(false);
+		return E_FAIL;
+	}
+
 	// 成功を返す
 	return S_OK;
 }
@@ -184,6 +195,9 @@ void CShader::Release(void)
 {
 	// トゥーンシェーダーの破棄
 	CToonShader::Release();
+
+	// エッジシェーダーの破棄
+	CEdgeShader::Release();
 }
 
 //============================================================

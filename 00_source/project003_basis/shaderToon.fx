@@ -76,7 +76,7 @@ void VS
 (
 	in	float4		inPos	: POSITION,		// 頂点座標
 	in	float4		inNor	: NORMAL,		// 法線ベクトル
-	in	float2		inTex	: TEXCOORD0,	// テクセル
+	in	float2		inTex	: TEXCOORD0,	// テクセル座標
 	out	VS_OUTPUT	outVertex				// 頂点情報
 )
 {

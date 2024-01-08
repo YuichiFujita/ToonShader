@@ -14,6 +14,7 @@
 #include "camera.h"
 #include "texture.h"
 #include "object2D.h"
+#include "shaderEdge.h"
 #include "debug.h"
 
 //************************************************************
@@ -274,6 +275,10 @@ void CRenderer::Draw(void)
 		// 画面描画用の2Dポリゴンの描画
 		m_pDrawScreen->Draw();
 
+		CTexture *p = GET_MANAGER->GetTexture();
+		CEdgeShader::GetInstance()->SetRefValue(0.05f);
+		CEdgeShader::GetInstance()->Render(p->GetTexture(m_nRenderTextureID), p->GetTexture(m_nZTextureID));
+
 		// デバッグ表示の描画
 		GET_MANAGER->GetDebugProc()->Draw();
 
@@ -324,7 +329,7 @@ HRESULT CRenderer::CreateRenderTexture(void)
 		SCREEN_HEIGHT,			// テクスチャ縦幅
 		1,						// ミップマップレベル
 		D3DUSAGE_RENDERTARGET,	// 性質・確保オプション
-		D3DFMT_A8R8G8B8,			// ピクセルフォーマット
+		D3DFMT_A8R8G8B8,		// ピクセルフォーマット
 		D3DPOOL_DEFAULT			// 格納メモリ
 	));
 
@@ -335,7 +340,7 @@ HRESULT CRenderer::CreateRenderTexture(void)
 		// 画面描画用の2Dポリゴンの生成
 		m_pDrawScreen = CObject2D::Create(SCREEN_CENT, SCREEN_SIZE);
 		if (m_pDrawScreen == nullptr)
-		{ // 画面描画用の2Dポリゴンが非使用中の場合
+		{ // 生成に失敗した場合
 
 			// 失敗を返す
 			assert(false);
@@ -343,7 +348,7 @@ HRESULT CRenderer::CreateRenderTexture(void)
 		}
 
 		// テクスチャを割当
-		m_pDrawScreen->BindTexture(m_nZTextureID);
+		m_pDrawScreen->BindTexture(m_nRenderTextureID);
 
 		// ラベルをスクリーンに設定
 		m_pDrawScreen->SetLabel(CObject::LABEL_SCREEN);

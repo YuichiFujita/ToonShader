@@ -134,6 +134,7 @@ HRESULT CToonShader::Init(void)
 		{ // 読込に失敗した場合
 
 			// 読み込み失敗を返す
+			assert(false);
 			return E_FAIL;
 		}
 	}
@@ -141,6 +142,7 @@ HRESULT CToonShader::Init(void)
 	{ // バージョンが使用不可な場合
 
 		// 古いバージョンによる失敗を返す
+		assert(false);
 		return E_FAIL;
 	}
 
