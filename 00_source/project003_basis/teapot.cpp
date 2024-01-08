@@ -86,8 +86,8 @@ void CTeapot::Uninit(void)
 //============================================================
 void CTeapot::Update(void)
 {
-	SetVec3Rotation(GetVec3Rotation() + D3DXVECTOR3(0.0f, 0.01f, 0.0f));
-	//SetAllMaterial(material::Blue());
+	SetVec3Rotation(GetVec3Rotation() + D3DXVECTOR3(0.01f, 0.01f, 0.01f));
+	//SetAllMaterial(material::White());
 
 	// オブジェクトモデルの更新
 	CObjectModel::Update();

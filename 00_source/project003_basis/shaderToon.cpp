@@ -20,7 +20,7 @@ namespace
 {
 	const char *TEXTURE_FILE[] =	// テクスチャ定数
 	{
-		"data\\TEXTURE\\SHADER\\toon005.png",	// 通常テクスチャ
+		"data\\TEXTURE\\SHADER\\toon000.png",	// 通常テクスチャ
 	};
 
 	const char* EFFECT_FX = "shaderToon.fx";	// トゥーンシェーダーのエフェクトファイル
