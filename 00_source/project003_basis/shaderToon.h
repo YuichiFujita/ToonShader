@@ -41,9 +41,9 @@ public:
 
 	// メンバ関数
 	void SetLightDirect(D3DXMATRIX *pMtxWorld, const int nLightID);	// ライト方向ベクトル設定
-	void SetUseTexture(const LPDIRECT3DTEXTURE9 *pTexture);	// テクスチャ使用設定 (ポインタ)
-	void SetUseTexture(const int nTextureID);				// テクスチャ使用設定 (インデックス)
-	void SetMaterial(const D3DXMATERIAL& rMaterial);		// マテリアル設定
+	void SetTexture(const LPDIRECT3DTEXTURE9 *pTexture);	// テクスチャ設定 (ポインタ)
+	void SetTexture(const int nTextureID);					// テクスチャ設定 (インデックス)
+	void SetMaterial(const D3DMATERIAL9& rMaterial);		// マテリアル設定
 	void SetDiffuse(const D3DXCOLOR& rDiffuse);				// 拡散光設定
 
 	// 静的メンバ関数

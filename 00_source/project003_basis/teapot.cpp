@@ -117,25 +117,20 @@ void CTeapot::Draw(void)
 	if (pToonShader->IsEffectOK())
 	{ // エフェクトが使用可能な場合
 
-		// 描画開始
-		pToonShader->Begin();
-
 		// マトリックス情報を設定
 		pToonShader->SetMatrix(GetPtrMtxWorld());
 
 		// ライト方向を設定
 		pToonShader->SetLightDirect(GetPtrMtxWorld(), 0);
 
-		// テクスチャ使用を設定
-		pToonShader->SetUseTexture(GetModelData().pTextureID[0]);
-
 		// マテリアルを設定
-		pToonShader->SetMaterial(GetMaterial(0));
+		pToonShader->SetMaterial(GetMaterial(0).MatD3D);
 
-		// 状態変更の伝達
-		pToonShader->CommitChanges();
+		// テクスチャを設定
+		pToonShader->SetTexture(GetModelData().pTextureID[0]);
 
-		// パスを設定
+		// 描画開始
+		pToonShader->Begin();
 		pToonShader->BeginPass(0);
 
 		// オブジェクトモデルの描画

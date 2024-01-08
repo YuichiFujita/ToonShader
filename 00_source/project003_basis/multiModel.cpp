@@ -12,6 +12,7 @@
 #include "renderer.h"
 #include "texture.h"
 #include "renderState.h"
+#include "shaderToon.h"
 
 //************************************************************
 //	子クラス [CMultiModel] のメンバ関数
@@ -91,8 +92,9 @@ void CMultiModel::Draw(void)
 	D3DMATERIAL9 matDef;	// 現在のマテリアル保存用
 
 	// ポインタを宣言
-	LPDIRECT3DDEVICE9 pDevice = GET_DEVICE;			// デバイスのポインタ
-	CRenderState *pRenderState = GetRenderState();	// レンダーステートの情報
+	LPDIRECT3DDEVICE9 pDevice = GET_DEVICE;					// デバイスのポインタ
+	CRenderState *pRenderState = GetRenderState();			// レンダーステート情報
+	CToonShader *pToonShader = CToonShader::GetInstance();	// トゥーンシェーダー情報
 
 	// レンダーステートを設定
 	pRenderState->Set();
@@ -135,11 +137,30 @@ void CMultiModel::Draw(void)
 	// ワールドマトリックスの設定
 	pDevice->SetTransform(D3DTS_WORLD, &mtxWorld);
 
+	// 描画開始
+	pToonShader->Begin();
+	pToonShader->BeginPass(0);
+
 	// 現在のマテリアルを取得
 	pDevice->GetMaterial(&matDef);
 
 	for (int nCntMat = 0; nCntMat < (int)modelData.dwNumMat; nCntMat++)
 	{ // マテリアルの数分繰り返す
+
+		// マトリックス情報を設定
+		pToonShader->SetMatrix(&mtxWorld);
+
+		// ライト方向を設定
+		pToonShader->SetLightDirect(&mtxWorld, 0);
+
+		// マテリアルを設定
+		pToonShader->SetMaterial(GetPtrMaterial(nCntMat)->MatD3D);
+
+		// テクスチャを設定
+		pToonShader->SetTexture(modelData.pTextureID[nCntMat]);
+
+		// 状態変更の伝達
+		pToonShader->CommitChanges();
 
 		// マテリアルの設定
 		pDevice->SetMaterial(&GetPtrMaterial(nCntMat)->MatD3D);
@@ -163,6 +184,10 @@ void CMultiModel::Draw(void)
 
 	// 保存していたマテリアルを戻す
 	pDevice->SetMaterial(&matDef);
+
+	// 描画終了
+	pToonShader->EndPass();
+	pToonShader->End();
 
 	// レンダーステートを再設定
 	pRenderState->Reset();

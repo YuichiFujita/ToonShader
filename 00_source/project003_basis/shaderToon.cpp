@@ -179,9 +179,9 @@ void CToonShader::SetLightDirect(D3DXMATRIX *pMtxWorld, const int nLightID)
 }
 
 //============================================================
-//	テクスチャ使用の設定処理 (ポインタ)
+//	テクスチャの設定処理 (ポインタ)
 //============================================================
-void CToonShader::SetUseTexture(const LPDIRECT3DTEXTURE9 *pTexture)
+void CToonShader::SetTexture(const LPDIRECT3DTEXTURE9 *pTexture)
 {
 	if (!IsEffectOK()) { assert(false); return; }	// エフェクト未使用
 
@@ -199,9 +199,9 @@ void CToonShader::SetUseTexture(const LPDIRECT3DTEXTURE9 *pTexture)
 }
 
 //============================================================
-//	テクスチャ使用の設定処理 (インデックス)
+//	テクスチャの設定処理 (インデックス)
 //============================================================
-void CToonShader::SetUseTexture(const int nTextureID)
+void CToonShader::SetTexture(const int nTextureID)
 {
 	if (!IsEffectOK()) { assert(false); return; }	// エフェクト未使用
 
@@ -222,12 +222,12 @@ void CToonShader::SetUseTexture(const int nTextureID)
 //============================================================
 //	マテリアルの設定処理
 //============================================================
-void CToonShader::SetMaterial(const D3DXMATERIAL& rMaterial)
+void CToonShader::SetMaterial(const D3DMATERIAL9& rMaterial)
 {
 	if (!IsEffectOK()) { assert(false); return; }	// エフェクト未使用
 
 	// 変数を宣言
-	D3DXVECTOR4 diffuse = D3DXVECTOR4(rMaterial.MatD3D.Diffuse.r, rMaterial.MatD3D.Diffuse.g, rMaterial.MatD3D.Diffuse.b, rMaterial.MatD3D.Diffuse.a);	// 拡散光
+	D3DXVECTOR4 diffuse = D3DXVECTOR4(rMaterial.Diffuse.r, rMaterial.Diffuse.g, rMaterial.Diffuse.b, rMaterial.Diffuse.a);	// 拡散光
 
 	// エフェクトにマテリアルの拡散光を設定
 	GetEffect()->SetVector(m_pDiffuse, &diffuse);

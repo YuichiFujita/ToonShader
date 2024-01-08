@@ -110,25 +110,20 @@ void CWall::Draw(void)
 	if (pToonShader->IsEffectOK())
 	{ // エフェクトが使用可能な場合
 
-		// 描画開始
-		pToonShader->Begin();
-
 		// マトリックス情報を設定
 		pToonShader->SetMatrix(GetPtrMtxWorld());
 
 		// ライト方向を設定
 		pToonShader->SetLightDirect(GetPtrMtxWorld(), 0);
 
-		// テクスチャ使用を設定
-		pToonShader->SetUseTexture(GET_MANAGER->GetTexture()->Regist(TEXTURE_FILE[0]));
-
 		// 拡散光を設定
 		pToonShader->SetDiffuse(GetColor());
 
-		// 状態変更の伝達
-		pToonShader->CommitChanges();
+		// テクスチャを設定
+		pToonShader->SetTexture(GET_MANAGER->GetTexture()->Regist(TEXTURE_FILE[0]));
 
-		// パスを設定
+		// 描画開始
+		pToonShader->Begin();
 		pToonShader->BeginPass(0);
 
 		// オブジェクトメッシュウォールの描画
