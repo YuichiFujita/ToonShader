@@ -117,7 +117,7 @@ void CWall::Draw(void)
 		pToonShader->SetLightDirect(GetPtrMtxWorld(), 0);
 
 		// ŠgŽUŒõ‚ðÝ’è
-		pToonShader->SetDiffuse(GetColor());
+		pToonShader->SetOnlyDiffuse(GetColor());
 
 		// ƒeƒNƒXƒ`ƒƒ‚ðÝ’è
 		pToonShader->SetTexture(GET_MANAGER->GetTexture()->Regist(TEXTURE_FILE[0]));

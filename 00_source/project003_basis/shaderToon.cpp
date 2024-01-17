@@ -20,7 +20,7 @@ namespace
 {
 	const char *TEXTURE_FILE[] =	// テクスチャ定数
 	{
-		"data\\TEXTURE\\SHADER\\toon000.png",	// 通常テクスチャ
+		"data\\TEXTURE\\SHADER\\toon001.png",	// 通常テクスチャ
 	};
 
 	const char* EFFECT_FX = "shaderToon.fx";	// トゥーンシェーダーのエフェクトファイル
@@ -46,6 +46,8 @@ CToonShader::CToonShader() :
 	m_pTextureToon	(nullptr),	// トゥーンマップテクスチャ
 	m_pDirectLight	(nullptr),	// 平行光源の方向ベクトル
 	m_pDiffuse		(nullptr),	// 拡散光
+	m_pAmbient		(nullptr),	// 環境光
+	m_pEmissive		(nullptr),	// 放射光
 	m_pUseTexture	(nullptr)	// テクスチャの使用状況
 {
 
@@ -77,6 +79,8 @@ HRESULT CToonShader::Init(void)
 	m_pTextureToon	= nullptr;	// トゥーンマップテクスチャ
 	m_pDirectLight	= nullptr;	// 平行光源の方向ベクトル
 	m_pDiffuse		= nullptr;	// 拡散光
+	m_pAmbient		= nullptr;	// 環境光
+	m_pEmissive		= nullptr;	// 放射光
 	m_pUseTexture	= nullptr;	// テクスチャの使用状況
 
 	// シェーダーの初期化
@@ -125,6 +129,8 @@ HRESULT CToonShader::Init(void)
 			m_pTextureToon	= pEffect->GetParameterByName(nullptr, "g_textureToon");	// トゥーンマップテクスチャ
 			m_pDirectLight	= pEffect->GetParameterByName(nullptr, "g_dirLight");		// 平行光源の方向ベクトル
 			m_pDiffuse		= pEffect->GetParameterByName(nullptr, "g_diffuse");		// 拡散光
+			m_pAmbient		= pEffect->GetParameterByName(nullptr, "g_ambient");		// 環境光
+			m_pEmissive		= pEffect->GetParameterByName(nullptr, "g_emissive");		// 放射光
 			m_pUseTexture	= pEffect->GetParameterByName(nullptr, "g_bUseTex");		// テクスチャの使用状況
 
 			// トゥーンマップテクスチャを設定
@@ -228,11 +234,18 @@ void CToonShader::SetMaterial(const D3DMATERIAL9& rMaterial)
 {
 	if (!IsEffectOK()) { assert(false); return; }	// エフェクト未使用
 
-	// 変数を宣言
-	D3DXVECTOR4 diffuse = D3DXVECTOR4(rMaterial.Diffuse.r, rMaterial.Diffuse.g, rMaterial.Diffuse.b, rMaterial.Diffuse.a);	// 拡散光
+	// ポインタを宣言
+	LPD3DXEFFECT pEffect = GetEffect();	// エフェクト情報
 
-	// エフェクトにマテリアルの拡散光を設定
-	GetEffect()->SetVector(m_pDiffuse, &diffuse);
+	// 変数を宣言
+	D3DXVECTOR4 diffuse  = D3DXVECTOR4(rMaterial.Diffuse.r,  rMaterial.Diffuse.g,  rMaterial.Diffuse.b,  rMaterial.Diffuse.a);	// 拡散光
+	D3DXVECTOR4 ambient  = D3DXVECTOR4(rMaterial.Ambient.r,  rMaterial.Ambient.g,  rMaterial.Ambient.b,  rMaterial.Ambient.a);	// 環境光
+	D3DXVECTOR4 emissive = D3DXVECTOR4(rMaterial.Emissive.r, rMaterial.Emissive.g, rMaterial.Emissive.b, rMaterial.Emissive.a);	// 放射光
+
+	// エフェクトにマテリアルの拡散光・環境光・放射光を設定
+	pEffect->SetVector(m_pDiffuse,  &diffuse);
+	pEffect->SetVector(m_pAmbient,  &ambient);
+	pEffect->SetVector(m_pEmissive, &emissive);
 }
 
 //============================================================
@@ -247,6 +260,49 @@ void CToonShader::SetDiffuse(const D3DXCOLOR& rDiffuse)
 
 	// エフェクトに拡散光を設定
 	GetEffect()->SetVector(m_pDiffuse, &diffuse);
+}
+
+//============================================================
+//	環境光の設定処理
+//============================================================
+void CToonShader::SetAmbient(const D3DXCOLOR& rAmbient)
+{
+	if (!IsEffectOK()) { assert(false); return; }	// エフェクト未使用
+
+	// 変数を宣言
+	D3DXVECTOR4 ambient = D3DXVECTOR4(rAmbient.r, rAmbient.g, rAmbient.b, rAmbient.a);	// 環境光
+
+	// エフェクトに環境光を設定
+	GetEffect()->SetVector(m_pAmbient, &ambient);
+}
+
+//============================================================
+//	放射光の設定処理
+//============================================================
+void CToonShader::SetEmissive(const D3DXCOLOR& rEmissive)
+{
+	if (!IsEffectOK()) { assert(false); return; }	// エフェクト未使用
+
+	// 変数を宣言
+	D3DXVECTOR4 emissive = D3DXVECTOR4(rEmissive.r, rEmissive.g, rEmissive.b, rEmissive.a);	// 放射光
+
+	// エフェクトに放射光を設定
+	GetEffect()->SetVector(m_pEmissive, &emissive);
+}
+
+//============================================================
+//	拡散光のみ設定処理
+//============================================================
+void CToonShader::SetOnlyDiffuse(const D3DXCOLOR& rDiffuse)
+{
+	// 拡散光の設定
+	SetDiffuse(rDiffuse);
+
+	// 環境光の設定
+	SetAmbient(XCOL_ABLACK);
+
+	// 放射光の設定
+	SetEmissive(XCOL_ABLACK);
 }
 
 //============================================================

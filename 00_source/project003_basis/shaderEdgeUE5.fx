@@ -9,11 +9,26 @@
 //************************************************************
 float2	m_Texel;	// 1テクセルのサイズ
 float	m_Limit;	// エッジとなるかを判定するための基準値。1.0fでエッジフィルターが無効になる。
+texture	g_textureScreen;	// 画面テクスチャ
 
 //************************************************************
 //	サンプラー宣言
 //************************************************************
-sampler tex0 : register(s0);	// シーンのカラー情報を格納したテクスチャ
+#if 0
+sampler tex0 =	// 画面テクスチャ
+sampler_state	// サンプラーステート
+{
+	// 対象テクスチャ
+	Texture = <g_textureScreen>;	// トゥーンマップ
+
+	// テクスチャアドレッシングモード
+	AddressU = Clamp;	// U成分の端を引き延ばす
+	AddressV = Clamp;	// V成分の端を引き延ばす
+};
+#else
+sampler tex0 : register(s0);	// オブジェクトテクスチャ
+#endif
+
 sampler tex1 =	// シーンのZ値を格納したテクスチャ
 sampler_state	// サンプラーステート
 {
@@ -85,9 +100,64 @@ void PS
 	outCol += CalcGapTextureColor(inVertex.Tex, float2(-2.0f,  0.0f));
 	outCol += CalcGapTextureColor(inVertex.Tex, float2( 0.0f,  2.0f));
 	outCol += CalcGapTextureColor(inVertex.Tex, float2( 0.0f, -2.0f));
+	outCol  = saturate(outCol);
 
-	outCol = saturate(outCol);
-	outCol = lerp(float4(0.0f, 0.0f, 0.0f, 0.0f), float4(0.0f, 0.0f, 0.0f, 1.0f), outCol.r);
+	if (outCol.r <= 0.0f)
+	{
+		outCol = float4(0.0f, 0.0f, 0.0f, 0.0f);
+
+		//int nNumEdge = 0;
+
+		//// 3x3の範囲でブラーをかける
+		//for (int i = -1; i <= 1; i++)
+		//{
+		//	for (int j = -1; j <= 1; j++)
+		//	{
+		//		// サンプルのオフセットを計算
+		//		float2 offset = float2(i, j);
+
+		//		// エッジテクスチャから重みを取得
+		//		float weight = tex2D(tex1, inVertex.Tex + offset).r;
+
+		//		if (weight > 0.0f)
+		//		{
+		//			nNumEdge++;
+		//		}
+		//	}
+		//}
+
+		//nNumEdge;
+	}
+	else
+	{
+		outCol = float4(1.0f, 0.0f, 0.0f, 1.0f);
+	}
+
+#if 0
+	//float totalWeight = 0.0f;
+
+	//// 3x3の範囲でブラーをかける
+	//for (int i = -1; i <= 1; i++)
+	//{
+	//	for (int j = -1; j <= 1; j++)
+	//	{
+	//		// サンプルのオフセットを計算
+	//		float2 offset = float2(i, j);
+
+	//		// エッジテクスチャから重みを取得
+	//		float weight = tex2D(tex1, inVertex.Tex + offset).r;
+
+	//		// エッジの重みを使って入力テクスチャから色をサンプリングし、ブラー処理に加算
+	//		outCol += float4(weight * tex2D(tex0, inVertex.Tex + offset).rgb, 1.0f);
+
+	//		// 重みを合計
+	//		totalWeight += weight;
+	//	}
+	//}
+
+	//// 合計重みで割って正規化
+	//outCol /= totalWeight;
+#endif
 }
 
 //============================================================

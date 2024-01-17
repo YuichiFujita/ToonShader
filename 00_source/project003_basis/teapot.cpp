@@ -21,7 +21,7 @@ namespace
 	const char *MODEL_FILE[] =	// モデル定数
 	{
 		"data\\MODEL\\TEAPOT\\teapot000.x",			// ティーポット
-		//"data\\MODEL\\OBSTACLE\\obstacle025.x",	// ティーポット
+		//"data\\MODEL\\OBSTACLE\\obstacle000.x",	// ティーポット
 	};
 
 	const int PRIORITY = 0;	// ティーポットの優先順位
@@ -86,8 +86,8 @@ void CTeapot::Uninit(void)
 //============================================================
 void CTeapot::Update(void)
 {
+	// 回転させる
 	SetVec3Rotation(GetVec3Rotation() + D3DXVECTOR3(0.01f, 0.01f, 0.01f));
-	//SetAllMaterial(material::White());
 
 	// オブジェクトモデルの更新
 	CObjectModel::Update();

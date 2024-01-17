@@ -14,7 +14,10 @@ texture  g_textureToon;				// トゥーンマップテクスチャ
 
 float3	g_dirLight	= float3(0.0f, 0.0f, 0.0f);			// 平行光源の方向ベクトル
 float4	g_diffuse	= float4(1.0f, 1.0f, 1.0f, 1.0f);	// 拡散光
-bool	g_bUseTex	= false;							// テクスチャ指定状況
+float4	g_ambient	= float4(0.0f, 0.0f, 0.0f, 0.0f);	// 環境光
+float4	g_emissive	= float4(0.0f, 0.0f, 0.0f, 0.0f);	// 放射光
+float	g_fRefEdge	= 1.0f;		// エッジ生成参照値
+bool	g_bUseTex	= false;	// テクスチャ指定状況
 
 //************************************************************
 //	サンプラー宣言
@@ -40,10 +43,9 @@ sampler_state		// サンプラーステート
 // 頂点シェーダー出力情報
 struct VS_OUTPUT
 {
-	float4 pos		: POSITION;		// 頂点座標
-	float2 tex		: TEXCOORD0;	// テクセル座標
-	float3 nor		: TEXCOORD1;	// 法線
-	float4 depth	: TEXCOORD2;	// Z値
+	float4 pos	: POSITION;		// 頂点座標
+	float2 tex	: TEXCOORD0;	// テクセル座標
+	float3 nor	: TEXCOORD1;	// 法線
 };
 
 //************************************************************
@@ -88,9 +90,6 @@ void VS
 
 	// テクセル座標を設定
 	outVertex.tex = inTex;
-
-	// テクスチャ座標を頂点に合わせる
-	outVertex.depth = outVertex.pos;
 }
 
 //============================================================
@@ -100,7 +99,7 @@ void PS
 (
 	in	VS_OUTPUT	inVertex,			// 頂点情報
 	out	float4		outCol	: COLOR0,	// ピクセル色
-	out	float4		outZ	: COLOR1	// ピクセルZ値
+	out	float4		outRef	: COLOR1	// ピクセル縁取り参照値
 )
 {
 	// 変数を宣言
@@ -116,8 +115,10 @@ void PS
 	toonCol = tex2D(texToon, float2(fLight, 0.5f));
 
 	// ピクセルの色情報を設定
-	outCol = g_diffuse;	// 拡散光を設定
-	outCol *= toonCol;	// トゥーンマップテクセル色を乗算
+	outCol =  g_diffuse;	// 拡散光を設定
+	outCol += g_ambient;	// 環境光を加算
+	outCol += g_emissive;	// 放射光を加算
+	outCol *= toonCol;		// トゥーンマップテクセル色を乗算
 
 	if (g_bUseTex)
 	{ // テクスチャが指定されている場合
@@ -126,10 +127,8 @@ void PS
 		outCol *= tex2D(texObject, inVertex.tex);
 	}
 
-	// 深度情報を格納する。
-	// Z / W により 0 から 1 の間に正規化されたZ値情報に変換
-	outZ = inVertex.depth.z / inVertex.depth.w;
-	outZ.a = 1.0f;
+	// ピクセルの縁取り参照値を設定
+	outRef = float4(g_fRefEdge, g_fRefEdge, g_fRefEdge, 1.0f);
 }
 
 //============================================================
