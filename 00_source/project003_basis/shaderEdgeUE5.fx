@@ -106,6 +106,7 @@ void PS
 	{
 		outCol = float4(0.0f, 0.0f, 0.0f, 0.0f);
 
+#if 0
 		//int nNumEdge = 0;
 
 		//// 3x3‚Ì”ÍˆÍ‚Åƒuƒ‰[‚ğ‚©‚¯‚é
@@ -127,6 +128,7 @@ void PS
 		//}
 
 		//nNumEdge;
+#endif
 	}
 	else
 	{
