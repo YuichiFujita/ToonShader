@@ -115,7 +115,7 @@ void PS
 	toonCol = tex2D(texToon, float2(fLight, 0.5f));
 
 	// ピクセルの色情報を設定
-	outCol =  g_diffuse;	// 拡散光を設定
+	outCol  = g_diffuse;	// 拡散光を設定
 	outCol += g_ambient;	// 環境光を加算
 	outCol += g_emissive;	// 放射光を加算
 	outCol *= toonCol;		// トゥーンマップテクセル色を乗算

@@ -25,7 +25,7 @@ public:
 	// テクスチャ列挙
 	enum ETexture
 	{
-		TEXTURE_NORMAL = 0,	// 通常テクスチャ
+		TEXTURE_TOON = 0,	// トゥーンマップテクスチャ
 		TEXTURE_MAX			// この列挙型の総数
 	};
 

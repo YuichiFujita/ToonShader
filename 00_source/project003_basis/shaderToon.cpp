@@ -20,7 +20,7 @@ namespace
 {
 	const char *TEXTURE_FILE[] =	// テクスチャ定数
 	{
-		"data\\TEXTURE\\SHADER\\toon001.png",	// 通常テクスチャ
+		"data\\TEXTURE\\SHADER\\toon003.png",	// トゥーンマップテクスチャ
 	};
 
 	const char* EFFECT_FX = "shaderToon.fx";	// トゥーンシェーダーのエフェクトファイル
@@ -134,7 +134,7 @@ HRESULT CToonShader::Init(void)
 			m_pUseTexture	= pEffect->GetParameterByName(nullptr, "g_bUseTex");		// テクスチャの使用状況
 
 			// トゥーンマップテクスチャを設定
-			SetToonMapTexture(TEXTURE_NORMAL);
+			SetToonMapTexture(TEXTURE_TOON);
 		}
 		else
 		{ // 読込に失敗した場合
@@ -173,17 +173,21 @@ void CToonShader::SetLightDirect(D3DXMATRIX *pMtxWorld, const int nLightID)
 	if (!IsEffectOK()) { assert(false); return; }	// エフェクト未使用
 
 	// 変数を宣言
-	D3DXVECTOR3 dir = GET_MANAGER->GetLight()->GetLight(nLightID).Direction;	// ライト方向 (三軸)
-	D3DXVECTOR4 dirLight = D3DXVECTOR4(dir.x, dir.y, dir.z, 0.0f);				// ライト方向 (四軸)
+	D3DXVECTOR3 dirLight = GET_MANAGER->GetLight()->GetLight(nLightID).Direction;	// ライト方向計算用
+	D3DXVECTOR4 setLight = D3DXVECTOR4(dirLight.x, dirLight.y, dirLight.z, 0.0f);	// ライト方向設定用
 	D3DXMATRIX  mtxInvWorld;	// ワールドマトリックス逆行列
 
 	// 平行光源の方向ベクトルを計算
-	D3DXMatrixInverse(&mtxInvWorld, nullptr, pMtxWorld);					// ワールドマトリックスの逆行列を計算
-	D3DXVec4Transform(&dirLight, &dirLight, &mtxInvWorld);					// マトリックスをベクトルに変換
-	D3DXVec3Normalize((D3DXVECTOR3*)&dirLight, (D3DXVECTOR3*)&dirLight);	// ベクトルを三次元変換し正規化
+	D3DXMatrixInverse(&mtxInvWorld, nullptr, pMtxWorld);	// ワールドマトリックスの逆行列を計算
+	D3DXVec4Transform(&setLight, &setLight, &mtxInvWorld);	// マトリックスをベクトルに変換
+
+	// ライトの方向ベクトルを正規化
+	dirLight = D3DXVECTOR3(setLight.x, setLight.y, setLight.z);			// 計算したベクトルを代入
+	D3DXVec3Normalize(&dirLight, &dirLight);							// ベクトルを正規化
+	setLight = D3DXVECTOR4(dirLight.x, dirLight.y, dirLight.z, 0.0f);	// 正規化したベクトルを設定
 
 	// エフェクトに平行光源の方向ベクトルを設定
-	GetEffect()->SetVector(m_pDirectLight, &dirLight);
+	GetEffect()->SetVector(m_pDirectLight, &setLight);
 }
 
 //============================================================
